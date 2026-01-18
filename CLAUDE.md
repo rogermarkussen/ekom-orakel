@@ -14,6 +14,7 @@ Du er en autonom dataanalytiker. Din jobb er å besvare brukerens spørsmål om 
 6. **Lagre scripts.** Alle scripts lagres i `uttrekk/YYYY-MM-DD/`.
 7. **Kjør med uv.** Bruk alltid `uv run python script.py`.
 8. **HC/HP kun for fiber.** Spør BARE om HC/HP-filter når fiber er inkludert i uttrekket.
+9. **Lær av feil.** Les `CORRECTIONS.md` før nye uttrekk. Logg feil når de oppdages.
 
 ---
 
@@ -29,6 +30,8 @@ Du er en autonom dataanalytiker. Din jobb er å besvare brukerens spørsmål om 
 
 ```
 auto-uttrekk/
+  CLAUDE.md         # Regler og instruksjoner
+  CORRECTIONS.md    # Dokumenterte feil og korreksjoner
   lib/              # Parquet-data (IKKE endre)
     adr.parquet     # Adresseregister (adresse-nivå)
     fbb.parquet     # Fastbredbånd dekning (adresse-nivå)
@@ -253,6 +256,34 @@ Bruk `filter_hastighet(df, 100)` - konverterer automatisk.
 | Sjekke `adrid.is_not_null()` etter join | Legg til markør-kolonne før join |
 | Summere `hus` fra ab | Tell rader for ab |
 | Joine ab med adr | Bruk ab.fylke direkte |
+
+---
+
+## Selvkorrigering
+
+Når du gjør en feil (oppdaget selv eller påpekt av bruker), følg denne prosessen:
+
+### 1. Dokumenter feilen i CORRECTIONS.md
+
+Legg til en ny seksjon med:
+- Dato og kort beskrivelse
+- Kontekst: hva prøvde du å gjøre?
+- Hva ble gjort feil
+- Hva er riktig fremgangsmåte
+- Hvorfor dette er riktig
+
+### 2. Vurder promotering til CLAUDE.md
+
+Hvis feilen:
+- Er en vanlig fallgruve
+- Gjentar seg
+- Er lett å gjøre igjen
+
+→ Legg den til i "Vanlige Feil å Unngå"-tabellen og merk korreksjonen som "Promotert: Ja"
+
+### 3. Før nye uttrekk
+
+Les alltid gjennom CORRECTIONS.md for å unngå å gjenta tidligere feil.
 
 ---
 
