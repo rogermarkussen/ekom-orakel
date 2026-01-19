@@ -109,9 +109,32 @@ SEGMENTFARGER = {
 For verdier fra lav til høy, bruk `viridis` eller `cividis` (fargeblind-sikre):
 
 ```python
+# Matplotlib
 import matplotlib.pyplot as plt
 plt.cm.viridis  # Lav → høy
 plt.cm.cividis  # Alternativ, også fargeblind-sikker
+
+# Seaborn
+import seaborn as sns
+sns.color_palette("viridis", as_cmap=True)
+sns.color_palette("cividis", as_cmap=True)
+```
+
+### Seaborn innebygde paletter
+
+Seaborn har flere fargeblind-sikre paletter:
+
+```python
+import seaborn as sns
+
+# Fargeblind-sikker kategorisk palett (anbefalt)
+sns.color_palette("colorblind")
+
+# Andre nyttige paletter
+sns.color_palette("deep")      # Mettede farger
+sns.color_palette("muted")     # Dempede farger
+sns.color_palette("dark")      # Mørke farger
+sns.color_palette("pastel")    # Pastellfarger
 ```
 
 ---
@@ -221,7 +244,155 @@ Eksempel: "Horisontalt stolpediagram som viser fiberdekning per fylke. Oslo har 
 
 ---
 
-## Matplotlib-innstillinger
+## Seaborn-oppsett (anbefalt)
+
+Seaborn gir penere grafer med mindre kode. Bruk seaborn som standard.
+
+### Standardoppsett
+
+```python
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+import seaborn as sns
+import pandas as pd
+
+# Sett tema én gang (whitegrid er rent og profesjonelt)
+sns.set_theme(style="whitegrid", palette="colorblind")
+
+# Figur
+fig, ax = plt.subplots(figsize=(10, 8))
+
+# Fjern unødvendige spines (seaborn beholder noen)
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+
+# Lagre med god oppløsning
+plt.tight_layout()
+plt.savefig('filnavn.png', dpi=150, facecolor='white', bbox_inches='tight')
+plt.close()
+```
+
+### Horisontalt stolpediagram (fylkesfordeling)
+
+```python
+import seaborn as sns
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def lag_fylkesdiagram_sns(df, verdikolonne, tittel, enhet='%'):
+    """Lag fylkesdiagram med seaborn."""
+    sns.set_theme(style="whitegrid")
+
+    # Sorter: NASJONALT nederst, deretter etter verdi
+    df = df.copy()
+    df['_sort'] = df['fylke'].apply(lambda x: 1 if x == 'NASJONALT' else 0)
+    df = df.sort_values(['_sort', verdikolonne], ascending=[True, True])
+
+    # Farger: NASJONALT får egen farge
+    farger = ['#1B4F72' if f == 'NASJONALT' else '#4472C4' for f in df['fylke']]
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+
+    # Seaborn barplot
+    sns.barplot(data=df, y='fylke', x=verdikolonne, palette=farger, ax=ax)
+
+    # Styling
+    ax.set_xlabel(enhet)
+    ax.set_ylabel('')
+    ax.set_title(tittel, fontweight='bold', loc='left', fontsize=14)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    # Uthev NASJONALT-label
+    for label in ax.get_yticklabels():
+        if label.get_text() == 'NASJONALT':
+            label.set_fontweight('bold')
+
+    plt.tight_layout()
+    return fig, ax
+```
+
+### Linjediagram (tidsserie)
+
+```python
+def lag_tidsserie_sns(df, x_kolonne, y_kolonne, tittel, gruppe_kolonne=None):
+    """Lag linjediagram med seaborn."""
+    sns.set_theme(style="whitegrid")
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    if gruppe_kolonne:
+        # Flere linjer
+        sns.lineplot(data=df, x=x_kolonne, y=y_kolonne,
+                     hue=gruppe_kolonne, marker='o', ax=ax)
+        ax.legend(title='', frameon=False)
+    else:
+        # Én linje
+        sns.lineplot(data=df, x=x_kolonne, y=y_kolonne,
+                     marker='o', linewidth=2.5, ax=ax)
+
+        # Legg til verdier på punktene
+        for x, y in zip(df[x_kolonne], df[y_kolonne]):
+            ax.annotate(f'{y:.0f}', (x, y), textcoords="offset points",
+                        xytext=(0, 10), ha='center', fontsize=10)
+
+    ax.set_title(tittel, fontweight='bold', loc='left', fontsize=14)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    plt.tight_layout()
+    return fig, ax
+```
+
+### Heatmap
+
+```python
+def lag_heatmap_sns(df, tittel, fmt='.1f'):
+    """Lag heatmap med seaborn."""
+    sns.set_theme(style="white")
+
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    sns.heatmap(df, annot=True, fmt=fmt, cmap='viridis',
+                linewidths=0.5, ax=ax, cbar_kws={'label': 'Verdi'})
+
+    ax.set_title(tittel, fontweight='bold', loc='left', fontsize=14)
+
+    plt.tight_layout()
+    return fig, ax
+```
+
+### Stablet stolpediagram
+
+```python
+def lag_stablet_stolpe_sns(df, kategorier, verdier_dict, tittel):
+    """Lag stablet horisontalt stolpediagram."""
+    sns.set_theme(style="whitegrid")
+
+    fig, ax = plt.subplots(figsize=(12, 9))
+
+    # Bruk pandas plotting for stablet
+    df_plot = pd.DataFrame(verdier_dict, index=kategorier)
+    df_plot.plot(kind='barh', stacked=True, ax=ax,
+                 color=['#1B4F72', '#4472C4', '#2E8B57'])
+
+    ax.set_xlabel('Andel (%)')
+    ax.set_title(tittel, fontweight='bold', loc='left', fontsize=14)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.08),
+              ncol=3, frameon=False)
+
+    plt.tight_layout()
+    return fig, ax
+```
+
+---
+
+## Matplotlib-oppsett (alternativ)
+
+Bruk ren matplotlib når seaborn ikke passer eller for mer kontroll.
 
 ### Standardoppsett
 
@@ -258,7 +429,7 @@ plt.savefig('filnavn.png', dpi=150, facecolor='white', bbox_inches='tight')
 def lag_fylkesdiagram(df, verdikolonne, tittel, enhet='%'):
     fig, ax = plt.subplots(figsize=(10, 8))
 
-    # Sorter: NASJONALT øverst, deretter etter verdi
+    # Sorter: NASJONALT nederst, deretter etter verdi
     df_sortert = df.sort_values(verdikolonne, ascending=True)
     nasjonalt = df_sortert[df_sortert['fylke'] == 'NASJONALT']
     andre = df_sortert[df_sortert['fylke'] != 'NASJONALT']
@@ -309,6 +480,7 @@ def lag_fylkesdiagram(df, verdikolonne, tittel, enhet='%'):
 | Dato | Endring | Grunn |
 |------|---------|-------|
 | 2026-01-19 | Opprettet | Etablere konsistente retningslinjer |
+| 2026-01-19 | Lagt til seaborn | Penere grafer med mindre kode |
 
 ---
 

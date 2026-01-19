@@ -49,12 +49,14 @@ Still spørsmål om:
 
 ### Steg 5: Generer graf
 
-Bruk matplotlib med farger fra DESIGNMAL.md:
+Bruk **seaborn** (anbefalt) eller matplotlib med farger fra DESIGNMAL.md.
 
 ```python
 import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')
+import seaborn as sns
+import pandas as pd
 
 # Fargepaletter fra DESIGNMAL.md
 HASTIGHETSFARGER = {
@@ -89,36 +91,28 @@ SEGMENTFARGER = {
 PRIMAER = '#4472C4'
 NASJONALT_FARGE = '#1B4F72'
 
-# Standardoppsett
+# Seaborn standardoppsett
+sns.set_theme(style="whitegrid")
 fig, ax = plt.subplots(figsize=(10, 8))
 
 # Fjern unødvendige elementer
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
-
-# Subtil grid
-ax.xaxis.grid(True, linestyle='--', alpha=0.7)
-ax.set_axisbelow(True)
-
-# Hvit bakgrunn
-fig.patch.set_facecolor('white')
-ax.set_facecolor('white')
 ```
 
 ### Eksempel: Horisontalt stolpediagram (fylkesfordeling)
 
 ```python
-# Sorter: NASJONALT øverst, deretter etter verdi synkende
-df_sortert = df.sort_values('prosent', ascending=True)
-nasjonalt = df_sortert[df_sortert['fylke'] == 'NASJONALT']
-andre = df_sortert[df_sortert['fylke'] != 'NASJONALT']
-df_sortert = pd.concat([andre, nasjonalt])
+# Sorter: NASJONALT nederst, deretter etter verdi
+df = df.copy()
+df['_sort'] = df['fylke'].apply(lambda x: 1 if x == 'NASJONALT' else 0)
+df = df.sort_values(['_sort', 'prosent'], ascending=[True, True])
 
 # Farger: NASJONALT får egen farge
-farger = [NASJONALT_FARGE if f == 'NASJONALT' else PRIMAER
-          for f in df_sortert['fylke']]
+farger = [NASJONALT_FARGE if f == 'NASJONALT' else PRIMAER for f in df['fylke']]
 
-bars = ax.barh(df_sortert['fylke'], df_sortert['prosent'], color=farger)
+# Seaborn barplot
+sns.barplot(data=df, y='fylke', x='prosent', palette=farger, ax=ax)
 
 # Uthev NASJONALT-label
 for label in ax.get_yticklabels():
@@ -126,43 +120,59 @@ for label in ax.get_yticklabels():
         label.set_fontweight('bold')
 
 ax.set_xlabel('Prosent (%)')
+ax.set_ylabel('')
 ax.set_title('Fiberdekning per fylke (andel husstander)', fontweight='bold', loc='left')
-```
-
-### Eksempel: Gruppert stolpediagram (flere hastighetsklasser)
-
-```python
-import numpy as np
-
-hastigheter = ['30 Mbit', '100 Mbit', '500 Mbit', '1000 Mbit']
-x = np.arange(len(fylker))
-width = 0.2
-
-for i, hast in enumerate(hastigheter):
-    offset = (i - len(hastigheter)/2 + 0.5) * width
-    bars = ax.barh(x + offset, df[hast], width,
-                   label=hast, color=HASTIGHETSFARGER[hast])
-
-ax.set_yticks(x)
-ax.set_yticklabels(fylker)
-
-# Legend utenfor grafen
-ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1),
-          ncol=4, frameon=False)
 ```
 
 ### Eksempel: Linjediagram (tidsserie)
 
 ```python
-for tilbyder in tilbydere:
-    ax.plot(df['ar'], df[tilbyder],
-            marker='o', linewidth=2,
-            label=tilbyder, color=MOBILFARGER.get(tilbyder.lower(), PRIMAER))
+# Én linje
+sns.lineplot(data=df, x='ar', y='verdi', marker='o', linewidth=2.5, ax=ax)
+
+# Legg til verdier på punktene
+for x, y in zip(df['ar'], df['verdi']):
+    ax.annotate(f'{y:.0f}', (x, y), textcoords="offset points",
+                xytext=(0, 10), ha='center', fontsize=10)
 
 ax.set_xlabel('År')
-ax.set_ylabel('Antall abonnement (mill.)')
+ax.set_ylabel('Antall (tusen)')
+ax.set_title('Utvikling over tid', fontweight='bold', loc='left')
+```
+
+### Eksempel: Flere linjer (tilbydere/kategorier)
+
+```python
+sns.lineplot(data=df, x='ar', y='verdi', hue='tilbyder',
+             marker='o', palette=MOBILFARGER, ax=ax)
+
+ax.legend(title='', frameon=False, loc='upper left')
 ax.set_title('Mobilabonnement per tilbyder', fontweight='bold', loc='left')
-ax.legend(loc='upper left', frameon=False)
+```
+
+### Eksempel: Heatmap
+
+```python
+sns.set_theme(style="white")
+pivot_df = df.pivot(index='fylke', columns='kategori', values='prosent')
+
+sns.heatmap(pivot_df, annot=True, fmt='.1f', cmap='viridis',
+            linewidths=0.5, ax=ax, cbar_kws={'label': 'Prosent'})
+
+ax.set_title('Dekning per fylke og kategori', fontweight='bold', loc='left')
+```
+
+### Eksempel: Stablet stolpediagram
+
+```python
+# Pandas plotting fungerer godt for stablet
+df_plot = df.set_index('fylke')[['1 tilbyder', '2 tilbydere', '3+ tilbydere']]
+df_plot.plot(kind='barh', stacked=True, ax=ax,
+             color=[NASJONALT_FARGE, PRIMAER, '#2E8B57'])
+
+ax.set_xlabel('Andel (%)')
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.08),
+          ncol=3, frameon=False)
 ```
 
 ### Steg 6: Lagre
