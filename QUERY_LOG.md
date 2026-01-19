@@ -147,6 +147,82 @@ ORDER BY CASE WHEN Fylke = 'NASJONALT' THEN 1 ELSE 0 END, Fylke
 **Resultat:** Nasjonal dekning: 30 Mbit 99.7%, 100 Mbit 99.1%, 500 Mbit 97.1%, 1000 Mbit 96.2%. Oslo høyest, Nordland lavest.
 **Notater:** Bruker MAX(ned) per adresse for å finne beste tilgjengelige hastighet. Hastigheter i kbps (30 Mbit = 30000 kbps).
 
+### Dekning: Alle teknologier per fylke (fbb + mob)
+
+**Spørsmål:** "Kan du gi meg den fylkesfordelte dekning på alle teknologier (inkludert mob) - en tek pr kolonne - basert på husstander"
+**Verifisert:** 2026-01-19
+**Promotert:** Nei
+
+```sql
+WITH tek_per_adresse AS (
+    SELECT adrid, tek FROM 'lib/fbb.parquet'
+    UNION
+    SELECT adrid, tek FROM 'lib/mob.parquet'
+),
+dekning AS (
+    SELECT
+        a.fylke,
+        a.adrid,
+        a.hus,
+        MAX(CASE WHEN t.tek = 'fiber' THEN 1 ELSE 0 END) as har_fiber,
+        MAX(CASE WHEN t.tek = 'ftb' THEN 1 ELSE 0 END) as har_ftb,
+        MAX(CASE WHEN t.tek = 'kabel' THEN 1 ELSE 0 END) as har_kabel,
+        MAX(CASE WHEN t.tek = 'radio' THEN 1 ELSE 0 END) as har_radio,
+        MAX(CASE WHEN t.tek = 'satellitt' THEN 1 ELSE 0 END) as har_satellitt,
+        MAX(CASE WHEN t.tek = '4g' THEN 1 ELSE 0 END) as har_4g,
+        MAX(CASE WHEN t.tek = '5g' THEN 1 ELSE 0 END) as har_5g
+    FROM 'lib/adr.parquet' a
+    LEFT JOIN tek_per_adresse t ON a.adrid = t.adrid
+    GROUP BY a.fylke, a.adrid, a.hus
+),
+per_fylke AS (
+    SELECT
+        fylke,
+        SUM(har_fiber * hus) as hus_fiber,
+        SUM(har_ftb * hus) as hus_ftb,
+        SUM(har_kabel * hus) as hus_kabel,
+        SUM(har_radio * hus) as hus_radio,
+        SUM(har_satellitt * hus) as hus_satellitt,
+        SUM(har_4g * hus) as hus_4g,
+        SUM(har_5g * hus) as hus_5g,
+        SUM(hus) as totalt_hus
+    FROM dekning
+    GROUP BY fylke
+),
+resultat AS (
+    SELECT
+        fylke as Fylke,
+        ROUND(hus_fiber * 100.0 / totalt_hus, 1) as Fiber,
+        ROUND(hus_ftb * 100.0 / totalt_hus, 1) as FTB,
+        ROUND(hus_kabel * 100.0 / totalt_hus, 1) as Kabel,
+        ROUND(hus_radio * 100.0 / totalt_hus, 1) as Radio,
+        ROUND(hus_satellitt * 100.0 / totalt_hus, 1) as Satellitt,
+        ROUND(hus_4g * 100.0 / totalt_hus, 1) as "4G",
+        ROUND(hus_5g * 100.0 / totalt_hus, 1) as "5G"
+    FROM per_fylke
+
+    UNION ALL
+
+    SELECT
+        'NASJONALT',
+        ROUND(SUM(hus_fiber) * 100.0 / SUM(totalt_hus), 1),
+        ROUND(SUM(hus_ftb) * 100.0 / SUM(totalt_hus), 1),
+        ROUND(SUM(hus_kabel) * 100.0 / SUM(totalt_hus), 1),
+        ROUND(SUM(hus_radio) * 100.0 / SUM(totalt_hus), 1),
+        ROUND(SUM(hus_satellitt) * 100.0 / SUM(totalt_hus), 1),
+        ROUND(SUM(hus_4g) * 100.0 / SUM(totalt_hus), 1),
+        ROUND(SUM(hus_5g) * 100.0 / SUM(totalt_hus), 1)
+    FROM per_fylke
+)
+SELECT * FROM resultat
+ORDER BY CASE WHEN Fylke = 'NASJONALT' THEN 1 ELSE 0 END, Fylke
+```
+
+**Resultat:** Nasjonalt: Fiber 91.0%, FTB 96.1%, Kabel 34.1%, Radio 0.0%, Satellitt 55.5%, 4G 100.0%, 5G 99.7%
+**Notater:** Kombinerer fbb og mob teknologier. Satellitt-tallene varierer mye mellom fylker (0-100%) pga. rapporteringsforskjeller.
+
+---
+
 <!--
 Eksempel på fremtidig loggføring:
 
