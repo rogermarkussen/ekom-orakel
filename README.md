@@ -16,6 +16,26 @@ Et AI-assistert analyseverktøy som besvarer spørsmål om norsk telekomdekning.
 | `ab.parquet` | Bredbåndsabonnementer | Adresse |
 | `ekom.parquet` | Ekommarkedsstatistikk (2000-2025) | Nasjonalt |
 
+## Systemkrav
+
+```bash
+# Installer DuckDB (CLI)
+# macOS:
+brew install duckdb
+
+# Linux:
+curl -LO https://github.com/duckdb/duckdb/releases/latest/download/duckdb_cli-linux-amd64.zip
+unzip duckdb_cli-linux-amd64.zip -d ~/.local/bin
+
+# Windows (PowerShell):
+winget install DuckDB.cli
+
+# Installer spatial extension (for Excel-export)
+duckdb -c "INSTALL spatial;"
+```
+
+Extensions installeres kun én gang - de lagres globalt.
+
 ## Bruk
 
 ```bash
@@ -33,6 +53,17 @@ claude
 # For å lage et nytt uttrekk med script og Excel-fil:
 /ny
 ```
+
+## Slash-kommandoer
+
+| Kommando | Beskrivelse |
+|----------|-------------|
+| `/ny` | Start nytt uttrekk. Samler inn krav via dialog og genererer Polars-script med Excel-output. |
+| `/loggpush` | Logg verifiserte spørringer til QUERY_LOG.md, commit og push til git. |
+| `/listhist [nr]` | Vis alle historiske spørringer, eller kjør spørring nummer N direkte. |
+| `/tilxl [spørring]` | Eksporter til Excel. Uten argument: eksporter forrige resultat. Med argument: kjør spørring, vis resultat, bekreft, eksporter. |
+| `/tilbilde [spørring]` | Eksporter til PNG-bilde. Samme logikk som `/tilxl`. |
+| `/graf` | Analyser forrige datasett og lag passende graf med oppfølgingsspørsmål om preferanser. |
 
 ## Mappestruktur
 

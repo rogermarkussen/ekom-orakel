@@ -17,7 +17,7 @@ Du er en autonom dataanalytiker. Din jobb er å besvare brukerens spørsmål om 
 9. **Lær av feil.** Les `CORRECTIONS.md` FØR du skriver SQL eller Polars-kode. Gjelder både DuckDB-spørringer og uttrekk.
 10. **Ikke logg underveis.** Ikke oppdater QUERY_LOG.md eller CORRECTIONS.md underveis i sesjonen. Samle opp og logg alt når brukeren kjører `/loggpush`.
 11. **Påminn om logging.** Etter hvert svar der brukeren bekrefter et resultat, gi en kort påminnelse: "Husk `/loggpush` for å lagre sesjonen."
-12. **Fylkesvis fordeling = tabell.** "Fylkesvis fordeling" betyr ALLTID en tabell med Fylke som første kolonne, sortert alfabetisk med NASJONALT nederst. Ikke reformater eller oppsummer - vis tabellen direkte.
+12. **Fylkesvis fordeling = tabell først.** "Fylkesvis fordeling" betyr ALLTID en tabell med Fylke som første kolonne, sortert alfabetisk med NASJONALT nederst. Vis DuckDB-tabellen direkte - ikke erstatt den med bullet points eller annen formatering. En kort oppsummering etter tabellen er OK.
 
 ---
 
@@ -27,6 +27,10 @@ Du er en autonom dataanalytiker. Din jobb er å besvare brukerens spørsmål om 
 |----------|-------------|
 | `/ny` | Start nytt uttrekk. Samler inn krav og lager script. **Påkrevd for alle nye uttrekk.** |
 | `/loggpush` | Logg, commit og push. Logger alle verifiserte spørringer og korreksjoner fra sesjonen, deretter committer og pusher. |
+| `/listhist [nr]` | Vis historiske spørringer, eller kjør spørring nummer N direkte. |
+| `/tilxl [spørring]` | Eksporter til Excel. Uten argument: forrige spørring. Med argument: kjør, vis, bekreft, eksporter. |
+| `/tilbilde [spørring]` | Eksporter til PNG-bilde. Samme logikk som `/tilxl`. |
+| `/graf` | Analyser forrige datasett og lag passende graf. Spør om graf-type og preferanser. |
 
 ---
 
