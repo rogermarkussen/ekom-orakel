@@ -9,39 +9,37 @@ Vis alle verifiserte spørringer fra QUERY_LOG.md, eller kjør en spesifikk spø
 
 ## Instruksjoner
 
-### Uten argument: Vis tabell
+### Uten argument: Vis indeks
 
-1. Les QUERY_LOG.md
-2. Parse alle spørringer under "## Logg"-seksjonen
-3. Presenter som tabell:
+1. Les **kun de første 30 linjene** av QUERY_LOG.md (indeksen ligger øverst)
+2. Finn tabellen under "## Indeks"
+3. Vis tabellen direkte til brukeren
 
+Indeksen har formatet:
+```
 | # | Kategori | Beskrivelse | Verifisert |
 |---|----------|-------------|------------|
-
-Hvor:
-- **#** = Radnummer (1, 2, 3...)
-- **Kategori** = Teksten etter "###" (f.eks. "Ekom", "Dekning", "Konkurranse")
-- **Beskrivelse** = Kort oppsummering av hva spørringen finner (maks 50 tegn)
-- **Verifisert** = Datoen spørringen ble verifisert
+| 1 | Ekom | Kontantkort-utvikling 2018-2024 | 2026-01-19 |
+...
+```
 
 ### Med argument: Kjør spørring
 
-1. Les QUERY_LOG.md og finn spørring nummer N
-2. Kjør SQL-spørringen med DuckDB
-3. Vis resultatet (husk regel 12: tabell først for fylkesfordeling)
+1. Les QUERY_LOG.md og finn spørring nummer N under "## Logg"
+2. Spørringene er nummerert i rekkefølge (### er spørring-overskrift)
+3. Kjør SQL-spørringen med DuckDB
+4. Vis resultatet (husk regel 12: tabell først for fylkesfordeling)
 
-## Eksempel output (uten argument)
+## Ved /loggpush - oppdater indeksen
 
-```
-| # | Kategori    | Beskrivelse                              | Verifisert |
-|---|-------------|------------------------------------------|------------|
-| 1 | Ekom        | Kontantkort-utvikling 2018-2024          | 2026-01-19 |
-| 2 | Abonnement  | Fordeling etter adressetype              | 2026-01-19 |
-| 3 | Dekning     | Fastbredbånd per hastighetsklasse        | 2026-01-19 |
-```
+Når nye spørringer legges til i QUERY_LOG.md, **må indeksen øverst også oppdateres**:
+
+1. Legg til ny rad i indeks-tabellen
+2. Bruk neste ledige nummer
+3. Hold indeksen synkronisert med logg-seksjonen
 
 ## Viktig
 
-- Ikke inkluder kommenterte seksjoner (inne i `<!-- -->`)
-- Vis kun faktisk loggede spørringer
-- Hold beskrivelsen kort og informativ
+- Les kun toppen av filen for `/listhist` uten argument (effektivitet)
+- Indeksen er sannhetskilden for oversikten
+- Marker `<!-- INDEKS-SLUTT -->` viser hvor indeksen slutter

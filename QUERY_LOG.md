@@ -1,8 +1,20 @@
 # Verifiserte Spørringer
 
-Denne filen logger DuckDB-spørringer som brukeren har bekreftet gir korrekte resultater. Bruk disse som referanse for lignende spørsmål.
+Denne filen logger DuckDB-spørringer som brukeren har bekreftet gir korrekte resultater.
 
-Når en spørring er spesielt nyttig eller representerer et vanlig mønster, bør den promoteres til "DuckDB Query Patterns" i CLAUDE.md.
+---
+
+## Indeks
+
+| # | Kategori | Beskrivelse | Verifisert |
+|---|----------|-------------|------------|
+| 1 | Ekom | Kontantkort-utvikling 2018-2024 | 2026-01-19 |
+| 2 | Abonnement | Fordeling etter adressetype | 2026-01-19 |
+| 3 | Dekning | Fastbredbånd per hastighetsklasse per fylke | 2026-01-19 |
+| 4 | Dekning | Alle teknologier per fylke (fbb + mob) | 2026-01-19 |
+| 5 | Konkurranse | Fiberdekning fordelt på antall tilbydere | 2026-01-19 |
+
+<!-- INDEKS-SLUTT - Ikke fjern denne linjen -->
 
 ---
 

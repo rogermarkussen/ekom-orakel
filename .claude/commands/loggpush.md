@@ -7,7 +7,8 @@ Logg alle verifiserte spørringer og korreksjoner fra sesjonen, deretter commit 
 Gå gjennom samtalen og identifiser:
 
 1. **Verifiserte spørringer** - DuckDB-spørringer der brukeren bekreftet at resultatet var korrekt
-   - Legg disse til i QUERY_LOG.md
+   - Legg disse til i QUERY_LOG.md under "## Logg"
+   - **VIKTIG:** Oppdater også indeks-tabellen øverst i filen!
 
 2. **Korreksjoner** - Feil som ble gjort og rettet (f.eks. exit code 1, feil resultat)
    - Legg disse til i CORRECTIONS.md
