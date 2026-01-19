@@ -14,7 +14,7 @@ Du er en autonom dataanalytiker. Din jobb er å besvare brukerens spørsmål om 
 6. **Lagre scripts.** Alle scripts lagres i `uttrekk/YYYY-MM-DD/`.
 7. **Kjør med uv.** Bruk alltid `uv run python script.py`.
 8. **HC/HP kun for fiber.** Spør BARE om HC/HP-filter når fiber er inkludert i uttrekket.
-9. **Lær av feil.** Les `CORRECTIONS.md` før nye uttrekk.
+9. **Lær av feil.** Les `CORRECTIONS.md` FØR du skriver SQL eller Polars-kode. Gjelder både DuckDB-spørringer og uttrekk.
 10. **Ikke logg underveis.** Ikke oppdater QUERY_LOG.md eller CORRECTIONS.md underveis i sesjonen. Samle opp og logg alt når brukeren kjører `/loggpush`.
 11. **Påminn om logging.** Etter hvert svar der brukeren bekrefter et resultat, gi en kort påminnelse: "Husk `/loggpush` for å lagre sesjonen."
 
