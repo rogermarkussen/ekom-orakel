@@ -44,6 +44,17 @@ ORDER BY CASE WHEN Fylke = 'NASJONALT' THEN 1 ELSE 0 END, Fylke
 ```
 **Hvorfor:** DuckDB (og standard SQL) krever at ORDER BY refererer til kolonner i den ytterste SELECT. Ved UNION må hele resultatet wrappes først.
 **Promotert:** Nei
+**Merknad:** Feilen gjentok seg 2026-01-19. Vurder promotering til CLAUDE.md.
+
+---
+
+### 2026-01-19: Antok at Python-pakker var tilgjengelige
+
+**Kontekst:** Lese Excel-fil for å hente data til graf
+**Hva ble gjort:** Prøvde å importere pandas, deretter openpyxl, deretter polars med fastexcel - alle feilet med ModuleNotFoundError
+**Hva er riktig:** Bruk DuckDB direkte for å lese data, eller sjekk tilgjengelige pakker først. DuckDB kan lese Excel indirekte via CSV-eksport, men parquet-filer er alltid tilgjengelige.
+**Hvorfor:** Miljøet har ikke pandas, openpyxl eller fastexcel installert. DuckDB og polars (uten Excel-støtte) er de primære verktøyene.
+**Promotert:** Nei
 
 <!--
 Eksempel på fremtidig korreksjon:
