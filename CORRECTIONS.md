@@ -24,7 +24,26 @@ Hver korreksjon følger dette formatet:
 
 ## Korreksjoner
 
-*(Ingen korreksjoner ennå - denne filen oppdateres når feil oppdages)*
+### 2026-01-19: ORDER BY på UNION-spørringer i DuckDB
+
+**Kontekst:** Lage tabell med fylker + nasjonalt rad, sortert med NASJONALT nederst
+**Hva ble gjort:** Prøvde å bruke ORDER BY direkte etter UNION ALL:
+```sql
+SELECT fylke, ... FROM per_fylke
+UNION ALL
+SELECT 'NASJONALT', ... FROM per_fylke
+ORDER BY CASE WHEN Fylke = 'NASJONALT' THEN 1 ELSE 0 END, Fylke
+```
+**Hva er riktig:** Wrap UNION i en CTE eller subquery før ORDER BY:
+```sql
+resultat AS (
+    SELECT ... UNION ALL SELECT ...
+)
+SELECT * FROM resultat
+ORDER BY CASE WHEN Fylke = 'NASJONALT' THEN 1 ELSE 0 END, Fylke
+```
+**Hvorfor:** DuckDB (og standard SQL) krever at ORDER BY refererer til kolonner i den ytterste SELECT. Ved UNION må hele resultatet wrappes først.
+**Promotert:** Nei
 
 <!--
 Eksempel på fremtidig korreksjon:

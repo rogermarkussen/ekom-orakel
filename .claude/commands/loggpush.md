@@ -1,10 +1,20 @@
-# Commit og push
+# Logg, commit og push
 
-Lag en forklarende commit-melding, commit endringene og push til remote.
+Logg alle verifiserte spørringer og korreksjoner fra sesjonen, deretter commit og push.
 
-## Steg 1: Analyser endringene
+## Steg 1: Logg sesjonen
 
-Kjør følgende kommandoer for å forstå hva som er endret:
+Gå gjennom samtalen og identifiser:
+
+1. **Verifiserte spørringer** - DuckDB-spørringer der brukeren bekreftet at resultatet var korrekt
+   - Legg disse til i QUERY_LOG.md
+
+2. **Korreksjoner** - Feil som ble gjort og rettet (f.eks. exit code 1, feil resultat)
+   - Legg disse til i CORRECTIONS.md
+
+Ikke logg noe som allerede er logget tidligere i sesjonen.
+
+## Steg 2: Analyser endringene
 
 ```bash
 git status
@@ -12,15 +22,13 @@ git diff --staged
 git diff
 ```
 
-## Steg 2: Stage endringer
-
-Hvis det er ustaged endringer som bør inkluderes:
+## Steg 3: Stage endringer
 
 ```bash
 git add -A
 ```
 
-## Steg 3: Lag commit-melding
+## Steg 4: Lag commit-melding
 
 Basert på endringene, lag en kort og forklarende commit-melding på norsk:
 
@@ -33,7 +41,7 @@ Eksempler:
 - "Fiks feil i hastighetsfilter"
 - "Oppdater CLAUDE.md med nye regler"
 
-## Steg 4: Commit og push
+## Steg 5: Commit og push
 
 ```bash
 git commit -m "Din melding"

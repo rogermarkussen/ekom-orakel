@@ -14,8 +14,9 @@ Du er en autonom dataanalytiker. Din jobb er å besvare brukerens spørsmål om 
 6. **Lagre scripts.** Alle scripts lagres i `uttrekk/YYYY-MM-DD/`.
 7. **Kjør med uv.** Bruk alltid `uv run python script.py`.
 8. **HC/HP kun for fiber.** Spør BARE om HC/HP-filter når fiber er inkludert i uttrekket.
-9. **Lær av feil.** Les `CORRECTIONS.md` før nye uttrekk. Logg feil når de oppdages.
-10. **Logg vellykkede spørringer.** Når brukeren bekrefter at et DuckDB-resultat er korrekt, logg spørringen i `QUERY_LOG.md`.
+9. **Lær av feil.** Les `CORRECTIONS.md` før nye uttrekk.
+10. **Ikke logg underveis.** Ikke oppdater QUERY_LOG.md eller CORRECTIONS.md underveis i sesjonen. Samle opp og logg alt når brukeren kjører `/loggpush`.
+11. **Påminn om logging.** Etter hvert svar der brukeren bekrefter et resultat, gi en kort påminnelse: "Husk `/loggpush` for å lagre sesjonen."
 
 ---
 
@@ -24,7 +25,7 @@ Du er en autonom dataanalytiker. Din jobb er å besvare brukerens spørsmål om 
 | Kommando | Beskrivelse |
 |----------|-------------|
 | `/ny` | Start nytt uttrekk. Samler inn krav og lager script. **Påkrevd for alle nye uttrekk.** |
-| `/compush` | Commit og push. Lager forklarende commit-melding, committer og pusher til remote. |
+| `/loggpush` | Logg, commit og push. Logger alle verifiserte spørringer og korreksjoner fra sesjonen, deretter committer og pusher. |
 
 ---
 
@@ -264,9 +265,13 @@ Bruk `filter_hastighet(df, 100)` - konverterer automatisk.
 
 ## Selvkorrigering
 
-Når du gjør en feil (oppdaget selv eller påpekt av bruker), følg denne prosessen:
+Når du gjør en feil (oppdaget selv eller påpekt av bruker):
 
-### 1. Dokumenter feilen i CORRECTIONS.md
+1. **Rett feilen** og fortsett
+2. **Husk feilen** for logging ved `/loggpush`
+3. **Ikke logg underveis** - dette gjøres samlet til slutt
+
+### Ved /loggpush - dokumenter feilen i CORRECTIONS.md
 
 Legg til en ny seksjon med:
 - Dato og kort beskrivelse
@@ -275,7 +280,7 @@ Legg til en ny seksjon med:
 - Hva er riktig fremgangsmåte
 - Hvorfor dette er riktig
 
-### 2. Vurder promotering til CLAUDE.md
+### Vurder promotering til CLAUDE.md
 
 Hvis feilen:
 - Er en vanlig fallgruve
@@ -284,7 +289,7 @@ Hvis feilen:
 
 → Legg den til i "Vanlige Feil å Unngå"-tabellen og merk korreksjonen som "Promotert: Ja"
 
-### 3. Før nye uttrekk
+### Før nye uttrekk
 
 Les alltid gjennom CORRECTIONS.md for å unngå å gjenta tidligere feil.
 
@@ -296,18 +301,20 @@ For å sikre konsistens over tid, logg vellykkede DuckDB-spørringer.
 
 ### Når logge?
 
-Etter at du har kjørt en DuckDB-spørring for et direkte spørsmål:
+**IKKE logg underveis i sesjonen.** Hold styr på verifiserte spørringer og feil mentalt, og logg alt samlet når brukeren kjører `/loggpush`.
 
-1. **Spør brukeren:** "Er dette resultatet korrekt?"
-2. **Hvis ja:** Logg spørringen i `QUERY_LOG.md`
-3. **Hvis nei:** Korriger og spør igjen
+Under sesjonen:
+1. Spør brukeren: "Er dette resultatet korrekt?"
+2. Hvis ja: Husk spørringen for logging senere
+3. Gi påminnelse: "Husk `/loggpush` for å lagre sesjonen."
 
-### Hva logges?
+### Hva logges (ved /loggpush)?
 
 - Brukerens opprinnelige spørsmål (naturlig språk)
 - Den verifiserte SQL-spørringen
 - Kort oppsummering av resultatet
 - Eventuelle viktige notater om tolkning
+- Korreksjoner (feil som ble gjort og rettet)
 
 ### Før nye spørringer
 

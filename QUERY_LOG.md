@@ -54,6 +54,99 @@ ORDER BY ar
 **Resultat:** Nedgang fra 755k (2018) til 401k (2024), -47% over perioden
 **Notater:** n1 = 'Kontantkort' for kontantkort, n1 = 'Fakturert' for fakturerte abonnement
 
+---
+
+### Abonnement: Fordeling etter adressetype
+
+**Spørsmål:** "Kan du gi meg antall ab som du finner på adresser med hus"
+**Verifisert:** 2026-01-19
+**Promotert:** Nei
+
+```sql
+-- Hovedspørring: Antall ab på adresser med hus
+SELECT COUNT(*) as antall_ab
+FROM 'lib/ab.parquet' ab
+JOIN 'lib/adr.parquet' a ON ab.adrid = a.adrid
+WHERE ab.adrid > 0 AND a.hus > 0
+
+-- Utvidet: Fordeling per kategori
+SELECT
+    CASE
+        WHEN ab.adrid = 0 THEN 'Ikke koblet (adrid=0)'
+        WHEN a.hus > 0 THEN 'Adresse med hus'
+        ELSE 'Adresse uten hus'
+    END as kategori,
+    COUNT(*) as antall_ab
+FROM 'lib/ab.parquet' ab
+LEFT JOIN 'lib/adr.parquet' a ON ab.adrid = a.adrid
+GROUP BY kategori
+ORDER BY antall_ab DESC
+```
+
+**Resultat:** 2 207 941 ab på adresser med hus (87%), 315 817 på adresser uten hus, 12 460 ikke koblet
+**Notater:** Filtrer på adrid > 0 for koblede ab. Adresser uten hus kan være næringsbygg, fritidsboliger, etc.
+
+---
+
+### Dekning: Fastbredbånd per hastighetsklasse per fylke
+
+**Spørsmål:** "gi meg nå en tabell som har fylker og nasjonalt i første kolonne og de andre kolonnene skal være hastighet 30, 100, 500, 1000. Dette skal være basert på dekningen for alle tek og det skal være basert på husstander"
+**Verifisert:** 2026-01-19
+**Promotert:** Nei
+
+```sql
+WITH dekning AS (
+    SELECT
+        adrid,
+        MAX(ned) as maks_ned
+    FROM 'lib/fbb.parquet'
+    GROUP BY adrid
+),
+per_adresse AS (
+    SELECT
+        a.fylke,
+        a.hus,
+        COALESCE(d.maks_ned, 0) as maks_ned
+    FROM 'lib/adr.parquet' a
+    LEFT JOIN dekning d ON a.adrid = d.adrid
+),
+per_fylke AS (
+    SELECT
+        fylke,
+        SUM(CASE WHEN maks_ned >= 30000 THEN hus ELSE 0 END) as hus_30,
+        SUM(CASE WHEN maks_ned >= 100000 THEN hus ELSE 0 END) as hus_100,
+        SUM(CASE WHEN maks_ned >= 500000 THEN hus ELSE 0 END) as hus_500,
+        SUM(CASE WHEN maks_ned >= 1000000 THEN hus ELSE 0 END) as hus_1000,
+        SUM(hus) as totalt_hus
+    FROM per_adresse
+    GROUP BY fylke
+),
+resultat AS (
+    SELECT
+        fylke as Fylke,
+        ROUND(hus_30 * 100.0 / totalt_hus, 1) as "30 Mbit",
+        ROUND(hus_100 * 100.0 / totalt_hus, 1) as "100 Mbit",
+        ROUND(hus_500 * 100.0 / totalt_hus, 1) as "500 Mbit",
+        ROUND(hus_1000 * 100.0 / totalt_hus, 1) as "1000 Mbit"
+    FROM per_fylke
+
+    UNION ALL
+
+    SELECT
+        'NASJONALT' as Fylke,
+        ROUND(SUM(hus_30) * 100.0 / SUM(totalt_hus), 1),
+        ROUND(SUM(hus_100) * 100.0 / SUM(totalt_hus), 1),
+        ROUND(SUM(hus_500) * 100.0 / SUM(totalt_hus), 1),
+        ROUND(SUM(hus_1000) * 100.0 / SUM(totalt_hus), 1)
+    FROM per_fylke
+)
+SELECT * FROM resultat
+ORDER BY CASE WHEN Fylke = 'NASJONALT' THEN 1 ELSE 0 END, Fylke
+```
+
+**Resultat:** Nasjonal dekning: 30 Mbit 99.7%, 100 Mbit 99.1%, 500 Mbit 97.1%, 1000 Mbit 96.2%. Oslo høyest, Nordland lavest.
+**Notater:** Bruker MAX(ned) per adresse for å finne beste tilgjengelige hastighet. Hastigheter i kbps (30 Mbit = 30000 kbps).
+
 <!--
 Eksempel på fremtidig loggføring:
 
