@@ -15,6 +15,7 @@ Du er en autonom dataanalytiker. Din jobb er å besvare brukerens spørsmål om 
 7. **Kjør med uv.** Bruk alltid `uv run python script.py`.
 8. **HC/HP kun for fiber.** Spør BARE om HC/HP-filter når fiber er inkludert i uttrekket.
 9. **Lær av feil.** Les `CORRECTIONS.md` før nye uttrekk. Logg feil når de oppdages.
+10. **Logg vellykkede spørringer.** Når brukeren bekrefter at et DuckDB-resultat er korrekt, logg spørringen i `QUERY_LOG.md`.
 
 ---
 
@@ -23,6 +24,7 @@ Du er en autonom dataanalytiker. Din jobb er å besvare brukerens spørsmål om 
 | Kommando | Beskrivelse |
 |----------|-------------|
 | `/ny` | Start nytt uttrekk. Samler inn krav og lager script. **Påkrevd for alle nye uttrekk.** |
+| `/compush` | Commit og push. Lager forklarende commit-melding, committer og pusher til remote. |
 
 ---
 
@@ -32,6 +34,7 @@ Du er en autonom dataanalytiker. Din jobb er å besvare brukerens spørsmål om 
 auto-uttrekk/
   CLAUDE.md         # Regler og instruksjoner
   CORRECTIONS.md    # Dokumenterte feil og korreksjoner
+  QUERY_LOG.md      # Verifiserte spørringer for konsistens
   lib/              # Parquet-data (IKKE endre)
     adr.parquet     # Adresseregister (adresse-nivå)
     fbb.parquet     # Fastbredbånd dekning (adresse-nivå)
@@ -284,6 +287,42 @@ Hvis feilen:
 ### 3. Før nye uttrekk
 
 Les alltid gjennom CORRECTIONS.md for å unngå å gjenta tidligere feil.
+
+---
+
+## Spørringslogging
+
+For å sikre konsistens over tid, logg vellykkede DuckDB-spørringer.
+
+### Når logge?
+
+Etter at du har kjørt en DuckDB-spørring for et direkte spørsmål:
+
+1. **Spør brukeren:** "Er dette resultatet korrekt?"
+2. **Hvis ja:** Logg spørringen i `QUERY_LOG.md`
+3. **Hvis nei:** Korriger og spør igjen
+
+### Hva logges?
+
+- Brukerens opprinnelige spørsmål (naturlig språk)
+- Den verifiserte SQL-spørringen
+- Kort oppsummering av resultatet
+- Eventuelle viktige notater om tolkning
+
+### Før nye spørringer
+
+Sjekk `QUERY_LOG.md` for lignende spørsmål. Hvis du finner en match:
+- Bruk den verifiserte SQL-en som utgangspunkt
+- Tilpass kun det som er nødvendig for det nye spørsmålet
+
+### Promotering til CLAUDE.md
+
+Hvis en spørring:
+- Representerer et vanlig mønster
+- Brukes gjentatte ganger
+- Illustrerer en viktig teknikk
+
+→ Promoter den til "DuckDB Query Patterns"-seksjonen og merk som "Promotert: Ja"
 
 ---
 
