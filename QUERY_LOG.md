@@ -13,6 +13,7 @@ Denne filen logger DuckDB-spørringer som brukeren har bekreftet gir korrekte re
 | 3 | Dekning | Fastbredbånd per hastighetsklasse per fylke | 2026-01-19 |
 | 4 | Dekning | Alle teknologier per fylke (fbb + mob) | 2026-01-19 |
 | 5 | Konkurranse | Fiberdekning fordelt på antall tilbydere | 2026-01-19 |
+| 6 | Dekning | Husstander med både kabel og fiber-HC | 2026-01-19 |
 
 <!-- INDEKS-SLUTT - Ikke fjern denne linjen -->
 
@@ -305,6 +306,65 @@ ORDER BY CASE WHEN Fylke = 'NASJONALT' THEN 1 ELSE 0 END, Fylke
 
 **Resultat:** Nasjonalt: 1 tilbyder 61.6%, 2 tilbydere 26.5%, 3+ tilbydere 11.9%. Agder har høyest konkurranse (31.5% med 3+), Rogaland lavest (80.6% med kun 1).
 **Notater:** Basert på husstander med fiberdekning. INNER JOIN sikrer at kun adresser med fiber inkluderes.
+
+---
+
+### Dekning: Husstander med både kabel og fiber-HC
+
+**Spørsmål:** "gi meg fylkesfordelt dekning på adresser med både kabel og fiber-hc. hus"
+**Verifisert:** 2026-01-19
+**Promotert:** Nei
+
+```sql
+WITH kabel_adr AS (
+    SELECT DISTINCT adrid
+    FROM 'lib/fbb.parquet'
+    WHERE tek = 'kabel'
+),
+fiber_hc_adr AS (
+    SELECT DISTINCT adrid
+    FROM 'lib/fbb.parquet'
+    WHERE tek = 'fiber' AND hc = true
+),
+begge AS (
+    SELECT adrid
+    FROM kabel_adr
+    INTERSECT
+    SELECT adrid
+    FROM fiber_hc_adr
+),
+per_fylke AS (
+    SELECT
+        a.fylke,
+        SUM(CASE WHEN b.adrid IS NOT NULL THEN a.hus ELSE 0 END) as hus_begge,
+        SUM(a.hus) as totalt_hus
+    FROM 'lib/adr.parquet' a
+    LEFT JOIN begge b ON a.adrid = b.adrid
+    GROUP BY a.fylke
+),
+resultat AS (
+    SELECT
+        fylke as Fylke,
+        hus_begge as "Hus med begge",
+        totalt_hus as "Totalt hus",
+        ROUND(hus_begge * 100.0 / totalt_hus, 1) as "Prosent"
+    FROM per_fylke
+
+    UNION ALL
+
+    SELECT
+        'NASJONALT',
+        SUM(hus_begge),
+        SUM(totalt_hus),
+        ROUND(SUM(hus_begge) * 100.0 / SUM(totalt_hus), 1)
+    FROM per_fylke
+)
+SELECT * FROM resultat
+ORDER BY CASE WHEN Fylke = 'NASJONALT' THEN 1 ELSE 0 END, Fylke
+```
+
+**Resultat:** 21.4% nasjonalt (551k hus). Oslo høyest (38.7%), Finnmark lavest (1.6%).
+**Notater:** Bruker INTERSECT for å finne adresser med begge teknologier. fiber-HC betyr hc = true.
 
 ---
 
