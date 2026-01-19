@@ -223,6 +223,79 @@ ORDER BY CASE WHEN Fylke = 'NASJONALT' THEN 1 ELSE 0 END, Fylke
 
 ---
 
+### Konkurranse: Fiberdekning fordelt på antall tilbydere per fylke
+
+**Spørsmål:** "Gi meg en fylkesvis fordeling av dekningen for de som har dekning fra flere tilbydere på fiber. Jeg ønsker å vite andelen med kun 1, 2 og 3+. hus"
+**Verifisert:** 2026-01-19
+**Promotert:** Nei
+
+```sql
+WITH fiber_tilbydere AS (
+    SELECT adrid, COUNT(DISTINCT tilb) as antall_tilb
+    FROM 'lib/fbb.parquet'
+    WHERE tek = 'fiber'
+    GROUP BY adrid
+),
+per_adresse AS (
+    SELECT
+        a.fylke,
+        a.hus,
+        CASE
+            WHEN ft.antall_tilb = 1 THEN '1 tilbyder'
+            WHEN ft.antall_tilb = 2 THEN '2 tilbydere'
+            ELSE '3+ tilbydere'
+        END as kategori
+    FROM 'lib/adr.parquet' a
+    INNER JOIN fiber_tilbydere ft ON a.adrid = ft.adrid
+),
+per_fylke AS (
+    SELECT
+        fylke as Fylke,
+        SUM(CASE WHEN kategori = '1 tilbyder' THEN hus ELSE 0 END) as hus_1,
+        SUM(CASE WHEN kategori = '2 tilbydere' THEN hus ELSE 0 END) as hus_2,
+        SUM(CASE WHEN kategori = '3+ tilbydere' THEN hus ELSE 0 END) as hus_3pluss,
+        SUM(hus) as totalt
+    FROM per_adresse
+    GROUP BY fylke
+),
+med_andeler AS (
+    SELECT
+        Fylke,
+        hus_1,
+        ROUND(hus_1 * 100.0 / totalt, 1) as andel_1,
+        hus_2,
+        ROUND(hus_2 * 100.0 / totalt, 1) as andel_2,
+        hus_3pluss,
+        ROUND(hus_3pluss * 100.0 / totalt, 1) as andel_3pluss,
+        totalt
+    FROM per_fylke
+),
+nasjonalt AS (
+    SELECT
+        'NASJONALT' as Fylke,
+        SUM(hus_1) as hus_1,
+        ROUND(SUM(hus_1) * 100.0 / SUM(totalt), 1) as andel_1,
+        SUM(hus_2) as hus_2,
+        ROUND(SUM(hus_2) * 100.0 / SUM(totalt), 1) as andel_2,
+        SUM(hus_3pluss) as hus_3pluss,
+        ROUND(SUM(hus_3pluss) * 100.0 / SUM(totalt), 1) as andel_3pluss,
+        SUM(totalt) as totalt
+    FROM med_andeler
+),
+resultat AS (
+    SELECT * FROM med_andeler
+    UNION ALL
+    SELECT * FROM nasjonalt
+)
+SELECT * FROM resultat
+ORDER BY CASE WHEN Fylke = 'NASJONALT' THEN 1 ELSE 0 END, Fylke
+```
+
+**Resultat:** Nasjonalt: 1 tilbyder 61.6%, 2 tilbydere 26.5%, 3+ tilbydere 11.9%. Agder har høyest konkurranse (31.5% med 3+), Rogaland lavest (80.6% med kun 1).
+**Notater:** Basert på husstander med fiberdekning. INNER JOIN sikrer at kun adresser med fiber inkluderes.
+
+---
+
 <!--
 Eksempel på fremtidig loggføring:
 
